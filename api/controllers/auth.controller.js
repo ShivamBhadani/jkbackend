@@ -12,10 +12,23 @@ export const register = async (req, res, next) => {
     });
 
     await newUser.save();
-    res.status(201).send("User has been created.");
-  } catch (err) {
-    next(err);
-  }
+    const token = jwt.sign(
+      {
+        id: newUser._id,
+        isSeller: newUser.isSeller,
+      },
+      "s3cretk"
+    );
+    const {password, ...info} = newUser._doc;
+    res
+    .cookie("accessToken", token, {
+      httpOnly: true,
+    })
+    .status(200)
+    .send(info);
+} catch (err) {
+  next(err);
+}
 };
 export const login = async (req, res, next) => {
   try {
@@ -32,7 +45,7 @@ export const login = async (req, res, next) => {
         id: user._id,
         isSeller: user.isSeller,
       },
-      process.env.JWT_KEY
+      "s3cretk"
     );
 
     const { password, ...info } = user._doc;
